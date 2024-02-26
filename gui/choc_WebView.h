@@ -541,6 +541,10 @@ struct choc::ui::WebView::Pimpl
         return {};
     }
 
+    void setAcceptKeyEvents(bool accept) {
+        objc::call<void>(webview, "setAcceptKeyEvents:", accept);
+    }
+
 private:
     id createDelegate()
     {
@@ -1720,6 +1724,13 @@ inline WebView::WebView (const Options& options)
 
     if (! pimpl->loadedOK())
         pimpl.reset();
+
+    bind("juce_enableKeyEvents", [&](const choc::value::ValueView &args) -> choc::value::Value {
+#if JUCE_MAC
+        pimpl->setAcceptKeyEvents(args[0].getWithDefault(false));
+#endif
+        return {};
+    });
 }
 
 inline WebView::~WebView()
