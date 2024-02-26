@@ -4,12 +4,17 @@
 
 @implementation imagiroWebView
 
-- (instancetype)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
+- (instancetype)initWithFrame:(CGRect)frame configuration:(WKWebViewConfiguration *)configuration {
+    self = [super initWithFrame:frame configuration:configuration];
     if (self) {
         [self registerForDraggedTypes:@[NSFilenamesPboardType]];
+        acceptKeyEvents = YES;
     }
     return self;
+}
+
+- (void)setAcceptKeyEvents:(BOOL)accept {
+    acceptKeyEvents = accept;
 }
 
 - (NSString *)jsonStringForFilePaths:(NSArray *)filePaths {
@@ -55,11 +60,17 @@
 }
 
 - (void)keyDown:(NSEvent *)event {
-    [[self nextResponder] keyDown:event];
+    if (acceptKeyEvents) [super keyDown:event];
+    else [[self nextResponder] keyDown:event];
 }
 
 - (void)keyUp:(NSEvent *)event {
-    [[self nextResponder] keyUp:event];
+    if (acceptKeyEvents) [super keyUp:event];
+    else [[self nextResponder] keyUp:event];
+}
+
+- (void)interpretKeyEvents:(NSArray<NSEvent*> *)events {
+    [super interpretKeyEvents:events];
 }
 
 @end
@@ -67,7 +78,7 @@
 namespace choc::ui {
 
     WebView::Pimpl::Pimpl (WebView& v, const Options& optionsToUse)
-            : owner (v), options (optionsToUse)
+            : owner (v), options (std::make_unique<Options> (optionsToUse))
     {
         using namespace choc::objc;
         CHOC_AUTORELEASE_BEGIN
@@ -111,7 +122,13 @@ namespace choc::ui {
             if (options->fetchResource)
                 navigate ({});
 
+            owner.bind("juce_enableKeyEvents", [&](const choc::value::ValueView &args) -> choc::value::Value {
+                call<void>(webview, "setAcceptKeyEvents:", args[0].getWithDefault(false));
+                return {};
+            });
+
         CHOC_AUTORELEASE_END
+
     }
 
     WebView::Pimpl::~Pimpl()
