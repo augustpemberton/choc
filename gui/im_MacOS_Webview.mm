@@ -134,7 +134,6 @@ namespace choc::ui {
             });
 
         CHOC_AUTORELEASE_END
-
     }
 
     WebView::Pimpl::~Pimpl()
