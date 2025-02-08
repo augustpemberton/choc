@@ -296,5 +296,4 @@ namespace choc::ui {
     }
 
     Class webviewClass = {};
-
 };

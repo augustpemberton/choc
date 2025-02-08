@@ -2028,6 +2028,7 @@ inline std::unique_ptr<juce::Component> createJUCEWebViewHolder (choc::ui::WebVi
 
 #if CHOC_WINDOWS
 #include "choc_win_webview_hack.h"
+<<<<<<< HEAD
 
 #endif // CHOC_USE_INTERNAL_WEBVIEW_DLL
 
