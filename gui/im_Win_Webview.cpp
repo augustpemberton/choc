@@ -2,7 +2,7 @@
 // Created by pembe on 2/26/2024.
 //
 
-#if JUCE_WINDOWS
+#if WIN32
 
 #include <iostream>
 #include "choc_WebView.h"

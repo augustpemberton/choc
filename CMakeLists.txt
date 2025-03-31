@@ -1,6 +1,6 @@
 
 if (APPLE)
     ADD_LIBRARY(choc STATIC gui/im_MacOS_Webview.mm)
-else()
+elseif(WIN32)
     ADD_LIBRARY(choc STATIC gui/im_Win_Webview.cpp)
 endif()
