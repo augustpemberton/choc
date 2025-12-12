@@ -1,13 +1,13 @@
-#import "im_MacOS_Webview.h"
-#include "choc_WebView.h"
-#include "choc_MessageLoop.h"
+#import <choc/gui/im_MacOS_Webview.h>
+#include <choc/gui/choc_WebView.h>
+#include <choc/gui/choc_MessageLoop.h>
 
 @implementation imagiroWebView
 
 - (instancetype)initWithFrame:(CGRect)frame configuration:(WKWebViewConfiguration *)configuration {
     self = [super initWithFrame:frame configuration:configuration];
     if (self) {
-        [self registerForDraggedTypes:@[NSFilenamesPboardType]];
+        [self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
         acceptKeyEvents = NO;
     }
     return self;
@@ -34,8 +34,27 @@
     return [[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] autorelease];
 }
 
+- (NSArray *)filePathsFromDraggingInfo:(id<NSDraggingInfo>)sender {
+    NSPasteboard *pasteboard = [sender draggingPasteboard];
+    NSMutableArray *filePaths = [NSMutableArray array];
+
+    // Modern API uses pasteboard items
+    NSArray *items = [pasteboard pasteboardItems];
+    for (NSPasteboardItem *item in items) {
+        NSString *urlString = [item stringForType:NSPasteboardTypeFileURL];
+        if (urlString) {
+            NSURL *url = [NSURL URLWithString:urlString];
+            if (url && [url isFileURL]) {
+                [filePaths addObject:[url path]];
+            }
+        }
+    }
+
+    return filePaths;
+}
+
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
-    NSArray *filePaths = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+    NSArray *filePaths = [self filePathsFromDraggingInfo:sender];
     NSString *jsonString = [self jsonStringForFilePaths:filePaths];
     NSString *jsCode = [NSString stringWithFormat:@"window.ui.handleDragEnter(%@)", jsonString];
     [self evaluateJavaScript:jsCode completionHandler:nil];
@@ -51,7 +70,7 @@
 }
 
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
-    NSArray *filePaths = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+    NSArray *filePaths = [self filePathsFromDraggingInfo:sender];
     NSString *jsonString = [self jsonStringForFilePaths:filePaths];
     NSString *jsCode = [NSString stringWithFormat:@"window.ui.handleDragOver(%@)", jsonString];
     [self evaluateJavaScript:jsCode completionHandler:nil];
@@ -60,7 +79,7 @@
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
-    NSArray *filePaths = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+    NSArray *filePaths = [self filePathsFromDraggingInfo:sender];
     NSString *jsonString = [self jsonStringForFilePaths:filePaths];
     NSString *jsCode = [NSString stringWithFormat:@"window.ui.handleDragDrop(%@)", jsonString];
     [self evaluateJavaScript:jsCode completionHandler:nil];
@@ -106,7 +125,6 @@
 
 - (BOOL)performKeyEquivalent:(NSEvent *)event
 {
-
     NSString *characters = [[event charactersIgnoringModifiers] lowercaseString];
     NSEventModifierFlags modifiers = [event modifierFlags];
 
@@ -117,19 +135,19 @@
     if ([characters isEqualToString:@"c"] && (modifiers & NSEventModifierFlagCommand))
     {
         // Handle copy action
-        [self copy:self];
+        [self evaluateJavaScript:@"document.execCommand('copy')" completionHandler:nil];
         return YES;
     }
     else if ([characters isEqualToString:@"v"] && (modifiers & NSEventModifierFlagCommand))
     {
         // Handle paste action
-        [self paste:self];
+        [self evaluateJavaScript:@"document.execCommand('paste')" completionHandler:nil];
         return YES;
     }
     else if ([characters isEqualToString:@"a"] && (modifiers & NSEventModifierFlagCommand))
     {
         // Handle select all action
-        [self selectAll:self];
+        [self evaluateJavaScript:@"document.execCommand('selectAll')" completionHandler:nil];
         return YES;
     }
     else if ([characters isEqualToString:@"z"] && (modifiers & NSEventModifierFlagCommand))
@@ -138,13 +156,11 @@
         {
             // Handle redo action
             [self evaluateJavaScript:@"document.execCommand('redo')" completionHandler:nil];
-            return YES;
         }
         else
         {
             // Handle undo action
             [self evaluateJavaScript:@"document.execCommand('undo')" completionHandler:nil];
-            return YES;
         }
         return YES;
     }

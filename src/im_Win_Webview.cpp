@@ -5,7 +5,7 @@
 #if WIN32
 
 #include <iostream>
-#include "choc_WebView.h"
+#include <choc/gui/choc_WebView.h>
 
 namespace choc::ui {
     void WebView::Pimpl::onJSKeyDown(const std::string& keyCode) {

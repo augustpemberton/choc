@@ -1,6 +1,12 @@
 
+add_library(choc STATIC)
+
 if (APPLE)
-    ADD_LIBRARY(choc STATIC gui/im_MacOS_Webview.mm)
+    target_sources(choc PRIVATE src/im_MacOS_Webview.mm)
 elseif(WIN32)
-    ADD_LIBRARY(choc STATIC gui/im_Win_Webview.cpp)
+    target_sources(choc PRIVATE src/im_Win_Webview.cpp)
 endif()
+
+target_include_directories(choc PUBLIC
+        "include"
+)
