@@ -56,14 +56,14 @@
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
     NSArray *filePaths = [self filePathsFromDraggingInfo:sender];
     NSString *jsonString = [self jsonStringForFilePaths:filePaths];
-    NSString *jsCode = [NSString stringWithFormat:@"window.ui.handleDragEnter(%@)", jsonString];
+    NSString *jsCode = [NSString stringWithFormat:@"if (window.ui && window.ui.handleDragEnter) { window.ui.handleDragEnter(%@); }", jsonString];
     [self evaluateJavaScript:jsCode completionHandler:nil];
 
     return [super draggingEntered:sender];
 }
 
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
-    NSString *jsCode = @"window.ui.handleDragLeave()";
+    NSString *jsCode = @"if (window.ui && window.ui.handleDragLeave) { window.ui.handleDragLeave(); }";
     [self evaluateJavaScript:jsCode completionHandler:nil];
 
     return [super draggingExited:sender];
@@ -72,7 +72,7 @@
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
     NSArray *filePaths = [self filePathsFromDraggingInfo:sender];
     NSString *jsonString = [self jsonStringForFilePaths:filePaths];
-    NSString *jsCode = [NSString stringWithFormat:@"window.ui.handleDragOver(%@)", jsonString];
+    NSString *jsCode = [NSString stringWithFormat:@"if (window.ui && window.ui.handleDragOver) { window.ui.handleDragOver(%@); }", jsonString];
     [self evaluateJavaScript:jsCode completionHandler:nil];
 
     return [super draggingUpdated:sender];
@@ -81,7 +81,7 @@
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
     NSArray *filePaths = [self filePathsFromDraggingInfo:sender];
     NSString *jsonString = [self jsonStringForFilePaths:filePaths];
-    NSString *jsCode = [NSString stringWithFormat:@"window.ui.handleDragDrop(%@)", jsonString];
+    NSString *jsCode = [NSString stringWithFormat:@"if (window.ui && window.ui.handleDragDrop) { window.ui.handleDragDrop(%@); }", jsonString];
     [self evaluateJavaScript:jsCode completionHandler:nil];
 
     return [super performDragOperation:sender];
@@ -93,7 +93,7 @@
     // because that code might call makeFirstResponder on a deleted view, as the host would've just deleted the view becasue of the ESC
     // but in theory this would break on all other plugins, so idk why its just for webview
     if (event.keyCode == 53) {
-        NSString *jsCode = @"window.ui.onEscapeKeyDown()";
+        NSString *jsCode = @"if (window.ui && window.ui.onEscapeKeyDown) { window.ui.onEscapeKeyDown(); }";
         [self evaluateJavaScript:jsCode completionHandler:nil];
         return;
     }
@@ -107,7 +107,7 @@
 
 - (void)keyUp:(NSEvent *)event {
     if (event.keyCode == 53) {
-        NSString *jsCode = @"window.ui.onEscapeKeyUp()";
+        NSString *jsCode = @"if (window.ui && window.ui.onEscapeKeyUp) { window.ui.onEscapeKeyUp(); }";
         [self evaluateJavaScript:jsCode completionHandler:nil];
         return;
     }
