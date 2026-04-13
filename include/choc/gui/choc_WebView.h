@@ -1612,12 +1612,15 @@ private:
 
         HRESULT STDMETHODCALLTYPE Invoke (ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args) override
         {
-            if (sender == nullptr)
+            if (sender == nullptr || args == nullptr)
                 return E_FAIL;
 
             LPWSTR message = {};
-            args->TryGetWebMessageAsString (std::addressof (message));
-            ownerPimpl.owner.invokeBinding (createUTF8FromUTF16 (message));
+            if (args->TryGetWebMessageAsString (std::addressof (message)) != S_OK || message == nullptr)
+                return E_FAIL;
+
+            auto messageString = createUTF8FromUTF16 (std::wstring (message));
+            ownerPimpl.owner.invokeBinding (messageString);
             sender->PostWebMessageAsString (message);
             CoTaskMemFree (message);
             return S_OK;
@@ -1625,6 +1628,9 @@ private:
 
         HRESULT STDMETHODCALLTYPE Invoke (ICoreWebView2*, ICoreWebView2PermissionRequestedEventArgs* args) override
         {
+            if (args == nullptr)
+                return E_FAIL;
+
             COREWEBVIEW2_PERMISSION_KIND permissionKind;
             args->get_PermissionKind (std::addressof (permissionKind));
 
@@ -1636,6 +1642,9 @@ private:
 
         HRESULT STDMETHODCALLTYPE Invoke (ICoreWebView2*, ICoreWebView2WebResourceRequestedEventArgs* args) override
         {
+            if (args == nullptr)
+                return E_FAIL;
+
             return ownerPimpl.onResourceRequested (args);
         }
 
